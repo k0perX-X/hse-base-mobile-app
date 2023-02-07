@@ -12,14 +12,15 @@
     <string name="textView5">Кабинет</string>
     <string name="textView6">Корпус</string>
     <string name="textView7">Преподаватель</string>
-    <string name="textView1">Выберите группу:</string>
     <string name="groupList">Выберите группу:</string>
     <string name="settings">Настройки</string>
-    <string name="doPhoto">Сделать фото</string>
-    <string name="save">Сохранить</string>
-    <string name="brightness">Освещение</string>
     <string name="gyroscope">Гироскоп:</string>
     <string name="accelerometer">Акселерометр:</string>
     <string name="motion">Датчик движения:</string>
     <string name="now_is">Сейчас:</string>
+    <string name="settingsSaveButton">Сохранить</string>
+    <string name="settingsTakePhoto">Сделать фото</string>
+    <string name="settingsSpecifyPhoto">Укажите фото:</string>
+    <string name="settingsCurrentIllumination">Текущая освещенность:</string>
+    <string name="settingsNameTextBox">Укажите свое имя</string>
 </resources>
