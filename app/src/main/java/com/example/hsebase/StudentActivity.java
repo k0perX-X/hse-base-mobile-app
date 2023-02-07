@@ -5,6 +5,7 @@ import static android.content.ContentValues.TAG;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -27,6 +28,7 @@ public class StudentActivity extends AppCompatActivity {
     private TextView subject;
     private TextView corp;
     private TextView cabinet;
+    private Spinner spinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +47,8 @@ public class StudentActivity extends AppCompatActivity {
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View itemSelected, int selectedItemPosition, long selectedId) {
+            public void onItemSelected(AdapterView<?> parent, View itemSelected,
+                                       int selectedItemPosition, long selectedId) {
                 Object item = adapter.getItem(selectedItemPosition);
                 Log.d(TAG, "selectedItem" + item);
             }
@@ -129,5 +132,21 @@ public class StudentActivity extends AppCompatActivity {
     public static String getDayStringOld(Date date, Locale locale) {
         DateFormat formatter = new SimpleDateFormat("EEEE", locale);
         return formatter.format(date);
+    }
+
+    private void showSchedule(ScheduleType type) {
+        Object selectedItem = spinner.getSelectedItem();
+        if (!(selectedItem instanceof Group)) {
+            return;
+        }
+        showScheduleImpl(ScheduleMode.STUDENT, type, (Group) selectedItem);
+    }
+
+    protected void showScheduleImpl(ScheduleMode mode, ScheduleType type, Group group) {
+        Intent intent = new Intent(this, ScheduleActivity.class);
+        intent.putExtra(ScheduleActivity.AKG_ID, group.getId());
+        intent.putExtra(ScheduleActivity.ARG_TYPE, type);
+        intent.putExtra(ScheduleActivity.AKG_MODE, mode);
+        startActivity(intent);
     }
 }

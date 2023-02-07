@@ -106,7 +106,6 @@ public class SettingsActivity extends AppCompatActivity implements SensorEventLi
 
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Do something here if sensor accuracy changes.
     }
 
     private String[] getStrings(float[] values) {
@@ -120,8 +119,6 @@ public class SettingsActivity extends AppCompatActivity implements SensorEventLi
 
     @Override
     public final void onSensorChanged(SensorEvent event) {
-        // The light sensor returns a single value.
-        // Many sensors return 3 values, one for each axis.
         String[] l = getStrings(event.values);
         if (event.sensor == light) {
             sensorLight.setText(String.join(":", l));
