@@ -7,6 +7,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
@@ -14,6 +15,7 @@ import androidx.core.content.FileProvider;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -31,12 +33,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class SettingsActivity extends AppCompatActivity implements SensorEventListener {
     private static final String PERMISSION = Manifest.permission.CAMERA;
@@ -82,23 +84,22 @@ public class SettingsActivity extends AppCompatActivity implements SensorEventLi
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorAccelerometer = findViewById(R.id.sensorAccelerometerText);
 
+        TextView allSensors = findViewById(R.id.allSensorsTextView);
+        allSensors.setText(String.join("\n",
+                (List<String>) sensorManager.getSensorList(Sensor.TYPE_ALL).stream()
+                        .map(Sensor::getName).collect(Collectors.toList())));
 
         imageView = findViewById(R.id.imageView);
         takePhotoButton = findViewById(R.id.takePhotoButton);
-        takePhotoButton.setOnClickListener(this::TakePhotoClick);
+        takePhotoButton.setOnClickListener(this::takePhotoClick);
 
         saveFolder = this.getCacheDir().toString();
 
-        try {
-            imageView.setImageURI(GetUriFromPath(saveFolder, imageName));
-        } catch (IOException ex) {
-            Log.e(TAG, "Create file", ex);
-        }
-
+        setImageViewPicture();
 
         nameTextBox = findViewById(R.id.nameTextBox);
         saveButton = findViewById(R.id.saveButton);
-        saveButton.setOnClickListener(this::SaveButtonClick);
+        saveButton.setOnClickListener(this::saveButtonClick);
         PreferenceManager.setDefaultValues(this, R.xml.preference, false);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         nameTextBox.setText(preferences.getString(userNameSettingName, nameTextBox.getText().toString()));
@@ -106,7 +107,6 @@ public class SettingsActivity extends AppCompatActivity implements SensorEventLi
 
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Do something here if sensor accuracy changes.
     }
 
     private String[] getStrings(float[] values) {
@@ -120,8 +120,6 @@ public class SettingsActivity extends AppCompatActivity implements SensorEventLi
 
     @Override
     public final void onSensorChanged(SensorEvent event) {
-        // The light sensor returns a single value.
-        // Many sensors return 3 values, one for each axis.
         String[] l = getStrings(event.values);
         if (event.sensor == light) {
             sensorLight.setText(String.join(":", l));
@@ -149,42 +147,55 @@ public class SettingsActivity extends AppCompatActivity implements SensorEventLi
         sensorManager.unregisterListener(this);
     }
 
-    public void TakePhotoClick(View v) {
+    public void takePhotoClick(View v) {
         int permissionCheck = ActivityCompat.checkSelfPermission(this, PERMISSION);
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_PERMISSION_CODE);
-            Toast.makeText(this, "Разрешение на доступ к камере отсуствует", Toast.LENGTH_SHORT).show();
-        } else {
-            try {
-                createImageFile();
-            } catch (IOException e) {
-                Log.e(TAG, "Create file", e);
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, PERMISSION)) {
+                showDialogNotPermittedCamera();
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_PERMISSION_CODE);
             }
+        } else {
+            createImageFile();
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (Arrays.stream(grantResults).anyMatch(x -> x == REQUEST_PERMISSION_CODE) && requestCode == REQUEST_PERMISSION_CODE) {
-            try {
-                createImageFile();
-            } catch (IOException e) {
-                Log.e(TAG, "Create file", e);
-            }
+            createImageFile();
         }
     }
 
-    private void createImageFile() throws IOException {
-        Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, GetUriFromPath(saveFolder, imageName));
+    private void showDialogNotPermittedCamera() {
+        AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
+        dlgAlert.setMessage(R.string.alertSettingsDialogMessage);
+        dlgAlert.setTitle(R.string.alertSettingsDialogTitle);
+        dlgAlert.setCancelable(true);
+        dlgAlert.setPositiveButton(R.string.alertSettingsDialogOK,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        startActivityForResult(new Intent(android.provider.Settings.ACTION_SETTINGS), 0);
+                    }
+                });
+        dlgAlert.create().show();
+    }
 
-        openSomeActivityForResult(takePhotoIntent);
+    private void createImageFile() {
+        try {
+            Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, GetUriFromPath(saveFolder, imageName));
+            openSomeActivityForResult(takePhotoIntent);
+        } catch (IOException e) {
+            Log.e(TAG, "Create file", e);
+        }
     }
 
     private Uri GetUriFromPath(String dir, String fileName) throws IOException {
         File file = new File(dir, fileName);
-        return FileProvider.getUriForFile(Objects.requireNonNull(getApplicationContext()),
+        return FileProvider.getUriForFile(this,
                 BuildConfig.APPLICATION_ID + ".provider", file);
     }
 
@@ -198,18 +209,20 @@ public class SettingsActivity extends AppCompatActivity implements SensorEventLi
                 @Override
                 public void onActivityResult(ActivityResult result) {
                     if (result.getResultCode() == Activity.RESULT_OK) {
-                        // интент съел путь и сохранил туда фото
-                        try {
-                            imageView.setImageURI(GetUriFromPath(saveFolder, imageName));
-                        } catch (IOException ex) {
-                            Log.e(TAG, "Create file", ex);
-                        }
+                        setImageViewPicture();
                     }
                 }
             });
 
+    private void setImageViewPicture() {
+        try {
+            imageView.setImageURI(GetUriFromPath(saveFolder, imageName));
+        } catch (IOException ex) {
+            Log.e(TAG, "Create file", ex);
+        }
+    }
 
-    public void SaveButtonClick(View v) {
+    public void saveButtonClick(View v) {
         PreferenceManager.setDefaultValues(this, R.xml.preference, false);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         preferences.edit().putString(userNameSettingName, nameTextBox.getText().toString()).apply();

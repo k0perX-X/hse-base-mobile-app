@@ -119,11 +119,11 @@ public class StudentActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        status.setText("Нет пар");
-        subject.setText("Дисциплина");
-        cabinet.setText("Кабинет");
-        corp.setText("Корпус");
-        teacher.setText("Преподаватель");
+        status.setText(R.string.timetableStatusDefault);
+        subject.setText(R.string.timetableSubjectDefault);
+        cabinet.setText(R.string.timetableCabinetDefault);
+        corp.setText(R.string.timetableCorpDefault);
+        teacher.setText(R.string.timetableTeacherDefault);
     }
 
     public static String getDayStringOld(Date date, Locale locale) {
