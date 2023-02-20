@@ -35,7 +35,7 @@ public class StudentActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_student);
 
-        final Spinner spinner = findViewById(R.id.groupList);
+        spinner = findViewById(R.id.groupList);
 
         List<Group> groups = new ArrayList<>();
         initGroupList(groups);
@@ -69,6 +69,12 @@ public class StudentActivity extends AppCompatActivity {
         teacher = findViewById(R.id.teacher);
 
         initData();
+
+        View scheduleDay = findViewById(R.id.schedule_day);
+        scheduleDay.setOnClickListener(v -> showSchedule(ScheduleType.DAY));
+        View scheduleWeek = findViewById(R.id.schedule_week);
+        scheduleWeek.setOnClickListener(v -> showSchedule(ScheduleType.WEEK));
+
     }
 
     static class Group {
@@ -144,9 +150,10 @@ public class StudentActivity extends AppCompatActivity {
 
     protected void showScheduleImpl(ScheduleMode mode, ScheduleType type, Group group) {
         Intent intent = new Intent(this, ScheduleActivity.class);
-        intent.putExtra(ScheduleActivity.AKG_ID, group.getId());
+        intent.putExtra(ScheduleActivity.ARG_ID, group.getId());
         intent.putExtra(ScheduleActivity.ARG_TYPE, type);
-        intent.putExtra(ScheduleActivity.AKG_MODE, mode);
+        intent.putExtra(ScheduleActivity.ARG_MODE, mode);
+        intent.putExtra(ScheduleActivity.SELECTED_ITEM, group.name);
         startActivity(intent);
     }
 }
