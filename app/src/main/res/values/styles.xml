@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name = "LabelStyle" parent="Theme.HseBase">
+
+    <style name="LabelStyle" parent="Theme.HseBase">
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/material_dynamic_secondary0</item>
+        <!--        <item name="android:textColor">@color/material_dynamic_secondary0</item>-->
+        <item name="colorAccent">?attr/colorSecondary</item>
     </style>
 </resources>

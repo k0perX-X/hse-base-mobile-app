@@ -5,6 +5,7 @@ import static android.content.ContentValues.TAG;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -27,13 +28,14 @@ public class StudentActivity extends AppCompatActivity {
     private TextView subject;
     private TextView corp;
     private TextView cabinet;
+    private Spinner spinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_student);
 
-        final Spinner spinner = findViewById(R.id.groupList);
+        spinner = findViewById(R.id.groupList);
 
         List<Group> groups = new ArrayList<>();
         initGroupList(groups);
@@ -45,7 +47,8 @@ public class StudentActivity extends AppCompatActivity {
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View itemSelected, int selectedItemPosition, long selectedId) {
+            public void onItemSelected(AdapterView<?> parent, View itemSelected,
+                                       int selectedItemPosition, long selectedId) {
                 Object item = adapter.getItem(selectedItemPosition);
                 Log.d(TAG, "selectedItem" + item);
             }
@@ -66,6 +69,12 @@ public class StudentActivity extends AppCompatActivity {
         teacher = findViewById(R.id.teacher);
 
         initData();
+
+        View scheduleDay = findViewById(R.id.schedule_day);
+        scheduleDay.setOnClickListener(v -> showSchedule(ScheduleType.DAY));
+        View scheduleWeek = findViewById(R.id.schedule_week);
+        scheduleWeek.setOnClickListener(v -> showSchedule(ScheduleType.WEEK));
+
     }
 
     static class Group {
@@ -119,15 +128,32 @@ public class StudentActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        status.setText("Нет пар");
-        subject.setText("Дисциплина");
-        cabinet.setText("Кабинет");
-        corp.setText("Корпус");
-        teacher.setText("Преподаватель");
+        status.setText(R.string.timetableStatusDefault);
+        subject.setText(R.string.timetableSubjectDefault);
+        cabinet.setText(R.string.timetableCabinetDefault);
+        corp.setText(R.string.timetableCorpDefault);
+        teacher.setText(R.string.timetableTeacherDefault);
     }
 
     public static String getDayStringOld(Date date, Locale locale) {
         DateFormat formatter = new SimpleDateFormat("EEEE", locale);
         return formatter.format(date);
+    }
+
+    private void showSchedule(ScheduleType type) {
+        Object selectedItem = spinner.getSelectedItem();
+        if (!(selectedItem instanceof Group)) {
+            return;
+        }
+        showScheduleImpl(ScheduleMode.STUDENT, type, (Group) selectedItem);
+    }
+
+    protected void showScheduleImpl(ScheduleMode mode, ScheduleType type, Group group) {
+        Intent intent = new Intent(this, ScheduleActivity.class);
+        intent.putExtra(ScheduleActivity.ARG_ID, group.getId());
+        intent.putExtra(ScheduleActivity.ARG_TYPE, type);
+        intent.putExtra(ScheduleActivity.ARG_MODE, mode);
+        intent.putExtra(ScheduleActivity.SELECTED_ITEM, group.name);
+        startActivity(intent);
     }
 }
