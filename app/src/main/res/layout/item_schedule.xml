@@ -9,7 +9,8 @@
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent"
-    android:layout_marginBottom="10dp">
+    android:layout_marginBottom="5dp"
+    android:layout_marginTop="5dp">
 
     <RelativeLayout
         android:id="@+id/time"
@@ -51,7 +52,10 @@
         android:layout_height="wrap_content"
         android:layout_alignStart="@+id/view"
         android:layout_alignParentEnd="true"
-        android:layout_margin="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginStart="7dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
         android:layout_toStartOf="@+id/view"
         android:orientation="vertical">
 

@@ -172,7 +172,7 @@ public class ScheduleActivity extends AppCompatActivity {
         item.setEnd("13:00");
         item.setType("Практическое занятие");
         item.setName("Анализ данных (анг)");
-        item.setPlace("Ауд. 5G3, Кочновский пр-д, д.З");
+        item.setPlace("Ауд. 503, Кочновский пр-д, д.З");
         item.setTeacher("Пред. Гущим Михаил Иванович");
         list.add(item);
         adapter.setDataList(list);
