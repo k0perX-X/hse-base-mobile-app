@@ -10,7 +10,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -27,10 +30,24 @@ public class TeacherActivity extends AppCompatActivity {
     private TextView cabinet;
     private TextView time;
 
+    private Date currentTime;
+    private TimeViewModel timeViewModel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_teacher);
+
+        timeViewModel = new ViewModelProvider(this).get(TimeViewModel.class);
+        timeViewModel.getTime().observe(this, new Observer<Date>() {
+            @Override
+            public void onChanged(@Nullable Date date) {
+                currentTime = date;
+                showTime();
+            }
+        });
+
+
         final Spinner spinner = findViewById(R.id.groupList);
         List<StudentActivity.Group> groups = new ArrayList<>();
         initGroupList(groups);
@@ -52,8 +69,7 @@ public class TeacherActivity extends AppCompatActivity {
             }
         });
 
-        TextView time = findViewById(R.id.time);
-        time.setText(GetTime.initTime());
+        time = findViewById(R.id.time);
 
         status = findViewById(R.id.status);
         subject = findViewById(R.id.subject);
@@ -63,6 +79,24 @@ public class TeacherActivity extends AppCompatActivity {
 
         initData();
     }
+
+    private void showTime() {
+        time.setText(getStringTimeAndWeek());
+    }
+
+    public String getStringTimeAndWeek() {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+        return simpleDateFormat.format(currentTime) + ", " +
+                getDayStringOld(currentTime, Locale.getDefault()).substring(0, 1).toUpperCase() +
+                getDayStringOld(currentTime, Locale.getDefault()).substring(1);
+    }
+
+    private String getDayStringOld(Date date, Locale locale) {
+        DateFormat formatter = new SimpleDateFormat("EEEE", locale);
+        return formatter.format(date);
+    }
+
 
     private void initGroupList(List<StudentActivity.Group> groups) {
         groups.add(new StudentActivity.Group(1, "Преподаватель 1"));

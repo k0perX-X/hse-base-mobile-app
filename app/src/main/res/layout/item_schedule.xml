@@ -15,10 +15,14 @@
     <RelativeLayout
         android:id="@+id/time"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_alignBottom="@+id/linearLayout2"
         android:layout_alignParentTop="true"
-        android:layout_margin="5dp">
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginBottom="5dp">
 
         <TextView
             android:id="@+id/start"
@@ -26,15 +30,18 @@
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
+            android:gravity="top|center"
             tools:text="10:50" />
 
         <TextView
             android:id="@+id/end"
+            android:layout_below="@+id/start"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_alignParentStart="true"
             android:layout_alignParentBottom="true"
-            tools:text="11:50" />
+            android:gravity="bottom|center"
+            tools:text="11:50"/>
     </RelativeLayout>
 
     <View

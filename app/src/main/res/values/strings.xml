@@ -31,4 +31,9 @@
     <string name="timetableCabinetDefault">Кабинет</string>
     <string name="timetableCorpDefault">Корпус</string>
     <string name="timetableTeacherDefault">Преподаватель</string>
+    <string name="lesson_is_running">Идет пара</string>
+    <string name="corp">\"Корпус \"</string>
+    <string name="aud">\", ауд. \"</string>
+    <string name="no_lessons">Пар в расписании нет</string>
+    <string name="error_timetable">Ошибка получения расписания</string>
 </resources>
