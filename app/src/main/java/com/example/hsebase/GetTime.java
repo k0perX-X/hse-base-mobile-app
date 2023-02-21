@@ -1,23 +1,23 @@
 package com.example.hsebase;
 
+import androidx.lifecycle.LiveData;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import okhttp3.OkHttpClient;
+
 public class GetTime {
-    static public String initTime() {
-        Date currentTime = new Date();
-        Locale locale = new Locale("ru", "RU");
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm", locale);
+    private TimeRequester timeRequester;
 
-        return simpleDateFormat.format(currentTime) + ", " +
-                getDayStringOld(currentTime, locale).substring(0, 1).toUpperCase() +
-                getDayStringOld(currentTime, locale).substring(1);
+    public GetTime(){
+        timeRequester = new TimeRequester();
     }
 
-    private static String getDayStringOld(Date date, Locale locale) {
-        DateFormat formatter = new SimpleDateFormat("EEEE", locale);
-        return formatter.format(date);
+    public LiveData<Date> getCurrentTime() {
+        return new TimeRequester();
     }
+
 }

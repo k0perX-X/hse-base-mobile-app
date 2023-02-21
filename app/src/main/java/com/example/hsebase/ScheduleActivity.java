@@ -3,12 +3,16 @@ package com.example.hsebase;
 import static android.content.ContentValues.TAG;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,6 +22,8 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.hsebase.DataBase.MainViewModel;
+import com.example.hsebase.DataBase.TimeTableWithTeacherEntity;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
@@ -26,7 +32,9 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -40,149 +48,158 @@ import okhttp3.ResponseBody;
 public class ScheduleActivity extends AppCompatActivity {
 
     public static final String ARG_TYPE = "0";
-    public static final String ARG_MODE = "-1";
-    public static final String ARG_ID = "0";
+    public static final String ARG_MODE = "1";
+    public static final String ARG_ID = "2";
+    public static final String ARG_TIME = "3";
     public final static String SELECTED_ITEM = "msg";
-    public int DEFAULT_ID = 0;
+    private ScheduleType type;
+    private ScheduleMode mode;
+    private int id;
+    public int DEFAULT_ID = -1;
     private ItemAdapter adapter;
+    private List<TimeTableWithTeacherEntity> lessons;
+    private RecyclerView recyclerView;
+    protected MainViewModel mainViewModel;
 
-    public static final String URL = "https://api.ipgeolocation.io/ipgeo?apiKey=d1defccb44ee4927bf7a4e08bbaed06c";
+    private static final String dateFormat = "EEEE, dd MMMM";
+    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat, Locale.getDefault());
 
     protected TextView time;
-    protected Date currentTime;
+    private Calendar cal;
+    private Date nextDay;
 
-    private OkHttpClient client = new OkHttpClient();
-
-    protected void getTime(String format) {
-        Request request = new Request.Builder().url(URL).build();
-        Call call = client.newCall(request);
-        call.enqueue(new Callback() {
-            public void onResponse(Call call, Response response) throws IOException {
-                parseResponse(response, format);
-            }
-
-            public void onFailure(Call call, IOException e) {
-                Log.e(TAG, "getTime", e);
-            }
-        });
-    }
-
-    protected void initTime(String format) {
-        getTime(format);
-    }
-
-    private void showTime(Date dateTime, String format) {
-        if (dateTime == null) {
-            return;
-        }
-        currentTime = dateTime;
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format, Locale.forLanguageTag("ru"));
-        time.setText(simpleDateFormat.format(currentTime));
-    }
-
-    public class TimeZone {
-        @SerializedName("current_time")
-        private String currentTime;
-
-        public String getCurrentTime() {
-            return currentTime;
-        }
-
-        public void setCurrentTime(String currentTime) {
-            this.currentTime = currentTime;
-        }
-    }
-
-    public class TimeResponse {
-        @SerializedName("time_zone")
-        private TimeZone timeZone;
-
-        public TimeZone getTimeZone() {
-            return timeZone;
-        }
-
-        public void setTimeZone(TimeZone timeZone) {
-            this.timeZone = timeZone;
-        }
-    }
-
-    private void parseResponse(Response response, String format) {
-        Gson gson = new Gson();
-        ResponseBody body = response.body();
-        try {
-            if (body == null) {
-                return;
-            }
-            String string = body.string();
-            Log.d(TAG, string);
-            TimeResponse timeResponse = gson.fromJson(string, TimeResponse.class);
-            String currentTimeVal = timeResponse.getTimeZone().getCurrentTime();
-            SimpleDateFormat SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
-            Date dateTime = SimpleDateFormat.parse(currentTimeVal);
-            // run on UI thread
-            runOnUiThread(() -> showTime(dateTime, format));
-        } catch (Exception e) {
-            Log.e(TAG, "", e);
-        }
-    }
-
+    public static Date currentTime;
+//    private TimeViewModel timeViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_schedule);
+        time = findViewById(R.id.time);
 
-        ScheduleType type = (ScheduleType) getIntent().getSerializableExtra(ARG_TYPE);
-        ScheduleMode mode = (ScheduleMode) getIntent().getSerializableExtra(ARG_MODE);
-        int id = getIntent().getIntExtra(ARG_ID, DEFAULT_ID);
+        currentTime = (Date) getIntent().getSerializableExtra(ARG_TIME);
+//        Intent intent = this.getIntent();
+//        Bundle bundle = intent.getExtras();
+//
+//        currentTime = (Date) bundle.getSerializable("value");
+        type = (ScheduleType) getIntent().getSerializableExtra(ARG_TYPE);
+        mode = (ScheduleMode) getIntent().getSerializableExtra(ARG_MODE);
+        Log.d("ScheduleActivity.onCreate", ARG_ID);
+        id = getIntent().getIntExtra(ARG_ID, DEFAULT_ID);
         String item_description = getIntent().getStringExtra(SELECTED_ITEM);
 
         TextView title = findViewById(R.id.title);
         title.setText(item_description);
 
-        time = findViewById(R.id.time);
-        initTime("EEEE, dd MMMM");
+        showTime();
 
-        RecyclerView recyclerView = findViewById(R.id.listView);
+        mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        recyclerView = findViewById(R.id.listView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
         adapter = new ItemAdapter(this::onScheduleItemClick);
-        initData();
-        recyclerView.setAdapter(adapter);
+        cal = new GregorianCalendar();
+        nextDay = new Date();
+        cal.setTime(currentTime);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        switch (type) {
+            case DAY:
+                cal.add(Calendar.DAY_OF_MONTH, 1);
+                nextDay = cal.getTime();
+                break;
+            case WEEK:
+                cal.add(Calendar.DAY_OF_MONTH, (9 - cal.get(Calendar.DAY_OF_WEEK)) % 7 == 0 ?
+                        7 : 9 - cal.get(Calendar.DAY_OF_WEEK) % 7);
+                nextDay = cal.getTime();
+                break;
+        }
+
+        mainViewModel.getTimeTableTeacherByDateAndGroup(currentTime, nextDay, id)
+                .observe(this, new Observer<List<TimeTableWithTeacherEntity>>() {
+                    @Override
+                    public void onChanged(@Nullable List<TimeTableWithTeacherEntity> list) {
+                        lessons = list;
+                        initData();
+                    }
+                });
+
+
+//        timeViewModel = new ViewModelProvider(this).get(TimeViewModel.class);
+
+//        currentTime = timeViewModel.getTime().getValue();
+//        timeViewModel.getTime().observe(this, new Observer<Date>() {
+//            @Override
+//            public void onChanged(@Nullable Date date) {
+//                currentTime = date;
+//                showTime();
+//                initData();
+//            }
+//        });
+
+//        initData();
+    }
+
+    private void showTime() {
+        time.setText(simpleDateFormat.format(currentTime));
     }
 
     private void onScheduleItemClick(ScheduleItem scheduleItem) {
     }
 
     private void initData() {
-        List<ScheduleItem> list = new ArrayList<>();
-        ScheduleItemHeader header = new ScheduleItemHeader();
-        header.setTitle("Понедельник, 28 января");
-        list.add(header);
-        ScheduleItem item = new ScheduleItem();
-        item.setStart("10:00");
-        item.setEnd("11:00");
-        item.setType("Практическое занятие");
-        item.setName("Анализ данных (анг)");
-        item.setPlace("Ауд. 503, Кочновский пр-д, д.З");
-        item.setTeacher("Пред. Гущим Михаил Иванович");
-        list.add(item);
-        item = new ScheduleItem();
-        item.setStart("12:00");
-        item.setEnd("13:00");
-        item.setType("Практическое занятие");
-        item.setName("Анализ данных (анг)");
-        item.setPlace("Ауд. 503, Кочновский пр-д, д.З");
-        item.setTeacher("Пред. Гущим Михаил Иванович");
-        list.add(item);
-        adapter.setDataList(list);
+        List<ScheduleItem> outList = new ArrayList<>();
+        if (lessons != null) {
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat, Locale.forLanguageTag("ru"));
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.forLanguageTag("ru"));
+            ScheduleItemHeader header;
+            if (type != ScheduleType.DAY) {
+                header = new ScheduleItemHeader();
+                header.setTitle(simpleDateFormat.format(currentTime));
+                outList.add(header);
+            }
+            cal.setTime(currentTime);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+            nextDay = cal.getTime();
+            for (TimeTableWithTeacherEntity lesson : lessons) {
+                if (lesson.timeTableEntity.timeStart.after(nextDay)) {
+                    header = new ScheduleItemHeader();
+                    header.setTitle(simpleDateFormat.format(nextDay));
+                    outList.add(header);
+                }
+                ScheduleItem item = new ScheduleItem();
+                item.setStart(timeFormat.format(lesson.timeTableEntity.timeStart));
+                item.setStart(timeFormat.format(lesson.timeTableEntity.timeEnd));
+                item.setType(lesson.timeTableEntity.type);
+                item.setName(lesson.timeTableEntity.subjName);
+                item.setPlace(getString(R.string.corp) + lesson.timeTableEntity.corp +
+                        getString(R.string.aud) + lesson.timeTableEntity.cabinet);
+                item.setTeacher(lesson.teacherEntity.fio);
+                outList.add(item);
+                Log.d("for", lesson.timeTableEntity.timeStart + " " + lesson.timeTableEntity.timeEnd);
+            }
+        } else {
+            ScheduleItemHeader header = new ScheduleItemHeader();
+            if (id == DEFAULT_ID) {
+                header.setTitle(getString(R.string.error_timetable));
+            } else {
+                header.setTitle(getString(R.string.no_lessons));
+            }
+            outList.add(header);
+        }
+        adapter.setDataList(outList);
+        recyclerView.setAdapter(adapter);
     }
 
 
     public static final class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         private final static int TYPE_ITEM = 0;
         private final static int TYPE_HEADER = 1;
-        private List<ScheduleItem> dataList = new ArrayList<>();
+        private List<ScheduleItem> dataList = new ArrayList<ScheduleItem>();
         private OnItemClick onItemClick;
 
         public ItemAdapter(OnItemClick onItemClick) {
