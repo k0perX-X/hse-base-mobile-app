@@ -3,11 +3,20 @@ package com.example.hsebase.DataBase;
 import static android.os.AsyncTask.execute;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.content.res.TypedArray;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
+
+import com.example.hsebase.R;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -51,55 +60,56 @@ public class DatabaseManager {
     }
 
     private void initData(Context context) {
-        List<GroupEntity> groups = new ArrayList<>();
-        GroupEntity group = new GroupEntity();
-        group.id = 1;
-        group.name = "Группа-18-1";
-        groups.add(group);
-        group = new GroupEntity();
-        group.id = 2;
-        group.name = "Группа-18-2";
-        groups.add(group);
-        DatabaseManager.getInstance(context).getHseDao().insertGroup(groups);
+        try {
+            List<GroupEntity> groups = new ArrayList<>();
+            GroupEntity group;
+            JSONObject jObject;
+            Resources res = context.getResources();
+            String[] jsons = res.getStringArray(R.array.groups);
+            for (String json : jsons) {
+                jObject = new JSONObject(json);
+                group = new GroupEntity();
+                group.id = jObject.getInt("id");
+                group.name = jObject.getString("name");
+                groups.add(group);
+            }
+            DatabaseManager.getInstance(context).getHseDao().insertGroup(groups);
 
-        List<TeacherEntity> teachers = new ArrayList<>();
-        TeacherEntity teacher = new TeacherEntity();
-        teacher.id = 1;
-        teacher.fio = "Петров Петр Петрович";
-        teachers.add(teacher);
-        teacher = new TeacherEntity();
-        teacher.id = 2;
-        teacher.fio = "Петров2 Петр2 Петрович2";
-        teachers.add(teacher);
-        DatabaseManager.getInstance(context).getHseDao().insertTeacher(teachers);
+            List<TeacherEntity> teachers = new ArrayList<>();
+            TeacherEntity teacher;
+            jsons = res.getStringArray(R.array.teachers);
+            for (String json : jsons) {
+                Log.d("initDataBase", json);
+                jObject = new JSONObject(json);
+                teacher = new TeacherEntity();
+                teacher.id = jObject.getInt("id");
+                teacher.fio = jObject.getString("fio");
+                teachers.add(teacher);
+            }
+            DatabaseManager.getInstance(context).getHseDao().insertTeacher(teachers);
 
-        List<TimeTableEntity> timeTables = new ArrayList();
-        TimeTableEntity timeTable = new TimeTableEntity();
-        timeTable.id = 1;
-        timeTable.cabinet = "Кабинет 1";
-        timeTable.subGroup = "ПИ";
-        timeTable.subjName = "Философия";
-        timeTable.corp = "K1";
-        timeTable.type = "Семинар";
-        timeTable.timeStart = dateFromString("2023-02-21 6:00");
-        timeTable.timeEnd = dateFromString("2023-02-21 11:30");
-        timeTable.groupId = 1;
-        timeTable.teacherId = 1;
-        timeTables.add(timeTable);
-
-        timeTable = new TimeTableEntity();
-        timeTable.id = 2;
-        timeTable.cabinet = "Кабинет 2";
-        timeTable.subGroup = "ПИ";
-        timeTable.subjName = "Мобильная разработка";
-        timeTable.corp = "K1";
-        timeTable.type = "Научно-исследовательский семинар";
-        timeTable.timeStart = dateFromString("2023-02-22 13:00");
-        timeTable.timeEnd = dateFromString("2023-02-22 15:00");
-        timeTable.groupId = 1;
-        timeTable.teacherId = 2;
-        timeTables.add(timeTable);
-        DatabaseManager.getInstance(context).getHseDao().insertTimeTable(timeTables);
+            List<TimeTableEntity> timeTables = new ArrayList();
+            TimeTableEntity timeTable;
+            jsons = res.getStringArray(R.array.timeTable);
+            for (String json : jsons) {
+                jObject = new JSONObject(json);
+                timeTable = new TimeTableEntity();
+                timeTable.id = jObject.getInt("id");
+                timeTable.cabinet = jObject.getString("cabinet");
+                timeTable.subGroup = jObject.getString("subGroup");
+                timeTable.subjName = jObject.getString("subjName");
+                timeTable.corp = jObject.getString("corp");
+                timeTable.type = jObject.getString("type");
+                timeTable.timeStart = dateFromString(jObject.getString("timeStart"));
+                timeTable.timeEnd = dateFromString(jObject.getString("timeEnd"));
+                timeTable.groupId = jObject.getInt("groupId");
+                timeTable.teacherId = jObject.getInt("teacherId");
+                timeTables.add(timeTable);
+            }
+            DatabaseManager.getInstance(context).getHseDao().insertTimeTable(timeTables);
+        } catch (Exception e) {
+            Log.e("initDataBase", e.getMessage());
+        }
     }
 
     private Date dateFromString(String val) {

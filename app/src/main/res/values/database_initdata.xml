@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="groups">
+        <item>{
+            \"id\": 1,
+            \"name\": \"Группа-18-1\"
+            }
+        </item>
+        <item>{
+            \"id\": 2,
+            \"name\": \"Группа-18-2\"
+            }
+        </item>
+    </array>
+    <array name="teachers">
+        <item>{
+            \"id\":1,
+            \"fio\": \"Петров Петр Петрович\"
+            }
+        </item>
+        <item>{
+            \"id\":2,
+            \"fio\": \"Петров2 Петр2 Петрович2\"
+            }
+        </item>
+    </array>
+    <array name="timeTable">
+        <item>{
+            \"id\":2,
+            \"cabinet\": \"Кабинет 2\",
+            \"subGroup\": \"ПИ\",
+            \"subjName\": \"Мобильная разработка\",
+            \"corp\": \"K1\",
+            \"type\": \"Научно-исследовательский семинар\",
+            \"timeStart\": \"2023-02-28 13:00\",
+            \"timeEnd\":\"2023-02-28 15:00\",
+            \"groupId\": 1,
+            \"teacherId\": 2
+            }
+        </item>
+        <item>{
+            \"id\": 1,
+            \"cabinet\": \"Кабинет 1\",
+            \"subGroup\": \"ПИ\",
+            \"subjName\": \"Философия\",
+            \"corp\":\"K1\",
+            \"type\": \"Семинар\",
+            \"timeStart\":\"2023-02-27 6:00\",
+            \"timeEnd\":\"2023-02-27 17:30\",
+            \"groupId\":1,
+            \"teacherId\": 2
+            }
+        </item>
+    </array>
+</resources>
