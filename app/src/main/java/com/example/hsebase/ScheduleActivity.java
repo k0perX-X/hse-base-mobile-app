@@ -173,7 +173,7 @@ public class ScheduleActivity extends AppCompatActivity {
                 }
                 ScheduleItem item = new ScheduleItem();
                 item.setStart(timeFormat.format(lesson.timeTableEntity.timeStart));
-                item.setStart(timeFormat.format(lesson.timeTableEntity.timeEnd));
+                item.setEnd(timeFormat.format(lesson.timeTableEntity.timeEnd));
                 item.setType(lesson.timeTableEntity.type);
                 item.setName(lesson.timeTableEntity.subjName);
                 item.setPlace(getString(R.string.corp) + lesson.timeTableEntity.corp +
